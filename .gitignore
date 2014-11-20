@@ -12,3 +12,23 @@
 hs_err_pid*
 
 Target/*
+
+#################
+## Eclipse
+#################
+
+.project
+.metadata
+bin/
+tmp/
+target/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+.lock
+dependency-reduced-pom.xml
