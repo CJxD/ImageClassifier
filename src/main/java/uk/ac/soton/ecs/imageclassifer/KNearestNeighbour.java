@@ -41,14 +41,7 @@ public class KNearestNeighbour
 
 		for(FImage image : testingSet)
 		{
-			System.out.println("Guess for " + testingSet.getID(i) + ": " + classifier.classify(image));
-
-			i++;
-
-			if(i > 50)
-			{
-				break;
-			}
+			System.out.println(testingSet.getID(i++) + " " + classifier.classify(image));
 		}
     }
 
