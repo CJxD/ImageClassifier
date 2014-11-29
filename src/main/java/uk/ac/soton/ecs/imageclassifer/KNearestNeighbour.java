@@ -20,6 +20,8 @@ public class KNearestNeighbour
 	protected VFSGroupDataset<FImage> trainingSet;
 	protected Map<FloatFV, String> featureVectors;
 
+	final public static int DIMENSION = 16;
+
 	public static void main(String[] args) throws FileSystemException
 	{
 		System.out.println("Loading datasets...");
@@ -57,7 +59,7 @@ public class KNearestNeighbour
 
 	protected FloatFV getFeatureVector(FImage image)
 	{
-		ResizeProcessor resizer = new ResizeProcessor(16, 16, false);
+		ResizeProcessor resizer = new ResizeProcessor(KNearestNeighbour.DIMENSION, KNearestNeighbour.DIMENSION, false);
 
 		int dimension = Math.min(image.getWidth(), image.getHeight());
 
@@ -90,13 +92,13 @@ public class KNearestNeighbour
 	{
 		FloatNearestNeighboursKDTree.Factory factory = new FloatNearestNeighboursKDTree.Factory();
 
-		float[][] converted = new float[this.featureVectors.size()][16 * 16];
+		float[][] converted = new float[this.featureVectors.size()][(int) Math.pow(KNearestNeighbour.DIMENSION, 2)];
 
 		int i = 0;
+
 		for(Map.Entry<FloatFV, String> entry : this.featureVectors.entrySet())
 		{
 			converted[i] = entry.getKey().values;
-
 			i++;
 		}
 
