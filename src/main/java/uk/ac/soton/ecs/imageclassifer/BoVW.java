@@ -6,19 +6,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.DataSource;
-import org.openimaj.data.dataset.Dataset;
-import org.openimaj.data.dataset.GroupedDataset;
-import org.openimaj.data.dataset.ListDataset;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
-import org.openimaj.experiment.dataset.sampling.GroupedUniformRandomisedSampler;
+import org.openimaj.experiment.evaluation.classification.ClassificationResult;
+import org.openimaj.experiment.evaluation.classification.Classifier;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.feature.FloatFV;
 import org.openimaj.feature.SparseIntFV;
@@ -32,11 +28,14 @@ import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
 import org.openimaj.math.geometry.shape.Rectangle;
+import org.openimaj.ml.annotation.Annotated;
+import org.openimaj.ml.annotation.AnnotatedObject;
 import org.openimaj.ml.annotation.ScoredAnnotation;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator.Mode;
 import org.openimaj.ml.clustering.FloatCentroidsResult;
 import org.openimaj.ml.clustering.kmeans.FloatKMeans;
+import org.openimaj.ml.training.BatchTrainer;
 
 import de.bwaldvogel.liblinear.SolverType;
 
@@ -48,7 +47,7 @@ import de.bwaldvogel.liblinear.SolverType;
  * @author cw17g12
  * 
  */
-public class BoVW
+public class BoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
 {
 
 	protected int codebookSize = 500;
@@ -79,15 +78,15 @@ public class BoVW
 		
 		BoVW bovw = new BoVW();
 
-		// Sampler hack to fix the Java inheritance of VFSListDataset
-		bovw.train(GroupedUniformRandomisedSampler.sample(training, 30));
+		bovw.train(AnnotatedObject.createList(training));
 		
 		System.out.println("Classifing testing set...");
 
 		int i = 0;
 		for(FImage image : testing)
 		{
-			System.out.println(testing.getID(i++) + " => " + bovw.classify(image));
+			System.out.println(testing.getID(i++) + " => ");
+			System.out.println(bovw.classify(image));
 		}
 	}
 
@@ -162,54 +161,27 @@ public class BoVW
 
 	}
 
-	/**
-	 * Classifies each image in the test data
-	 * 
-	 * @param testData
-	 * @return Map of image to each category and its confidence
-	 */
-	public Map<FImage, List<ScoredAnnotation<String>>> classify(ListDataset<FImage> testData)
+	@Override
+	public void train(List<? extends Annotated<FImage, String>> data)
+	{
+		trainQuantiser(data);
+		trainAnnotator(data);
+	}
+
+	@Override
+	public ClassificationResult<String> classify(FImage image)
 	{
 		if(quantiser == null)
 			throw new IllegalStateException("Classifier is not trained");
 		if(annotator == null)
 			throw new IllegalStateException("Annotator is not trained");
+
+		PrintableClassificationResult<String> result = new PrintableClassificationResult<>();
 		
-		// Annotate each image in the test data with scored annotations
-		Map<FImage, List<ScoredAnnotation<String>>> result = new HashMap<>(testData.size());
-		for(FImage image : testData)
-		{
-			result.put(image, annotator.annotate(image));
+		for (ScoredAnnotation<String> a : annotator.annotate(image)) {
+			result.put(a.annotation, a.confidence);
 		}
-
 		return result;
-	}
-	
-	/**
-	 * Classifies a single image
-	 * 
-	 * @param image
-	 * @return Each category and its confidence
-	 */
-	public List<ScoredAnnotation<String>> classify(FImage image)
-	{
-		if(quantiser == null)
-			throw new IllegalStateException("Classifier is not trained");
-		if(annotator == null)
-			throw new IllegalStateException("Annotator is not trained");
-
-		return annotator.annotate(image);
-	}
-
-	/**
-	 * Trains the quantiser and the annotator for classification.
-	 * 
-	 * @param trainingData
-	 */
-	public void train(GroupedDataset<String, ListDataset<FImage>, FImage> trainingData)
-	{
-		trainQuantiser(GroupedUniformRandomisedSampler.sample(trainingData, 30));
-		trainAnnotator(trainingData);
 	}
 
 	/**
@@ -217,14 +189,14 @@ public class BoVW
 	 * 
 	 * @param trainingData
 	 */
-	protected void trainQuantiser(Dataset<FImage> trainingData)
+	protected void trainQuantiser(List<? extends Annotated<FImage, String>> data)
 	{
 		List<LocalFeatureList<ImagePatch>> allFeatures = new ArrayList<>();
 
 		// Load a list of ImagePatch features
-		for(FImage image : trainingData)
+		for(Annotated<FImage, String> image : data)
 		{
-			allFeatures.add(getPatches(image));
+			allFeatures.add(getPatches(image.getObject()));
 		}
 
 		// Populate a DataSource with the ImagePatches
@@ -244,7 +216,7 @@ public class BoVW
 	 * 
 	 * @param trainingData
 	 */
-	protected void trainAnnotator(GroupedDataset<String, ListDataset<FImage>, FImage> trainingData)
+	protected void trainAnnotator(List<? extends Annotated<FImage, String>> data)
 	{
 		if(quantiser == null)
 			throw new IllegalStateException("Quantiser is not trained");
@@ -262,7 +234,7 @@ public class BoVW
 
 		// Train the annotator to make associations between certain "words" and image classes
 		annotator = new LiblinearAnnotator<>(extractor, Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
-		annotator.train(trainingData);
+		annotator.train(data);
 	}
 
 	/**
@@ -301,4 +273,5 @@ public class BoVW
 
 		return patches;
 	}
+
 }
