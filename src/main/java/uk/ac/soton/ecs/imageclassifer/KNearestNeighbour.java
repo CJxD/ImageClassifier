@@ -1,5 +1,6 @@
 package uk.ac.soton.ecs.imageclassifer;
 
+import java.io.File;
 import java.util.*;
 
 import org.apache.commons.vfs2.FileSystemException;
@@ -15,7 +16,7 @@ import org.openimaj.util.pair.IntFloatPair;
 import org.openimaj.util.parallel.Parallel;
 import org.openimaj.util.parallel.partition.RangePartitioner;
 
-public class KNearestNeighbour 
+public class KNearestNeighbour
 {
 	protected VFSGroupDataset<FImage> trainingSet;
 	protected Map<FloatFV, String> featureVectors;
@@ -24,26 +25,35 @@ public class KNearestNeighbour
 
 	public static void main(String[] args) throws FileSystemException
 	{
+		if(args.length < 2)
+			throw new IllegalArgumentException("Usage: KNearestNeighbour <training uri> <testing uri>");
+
 		System.out.println("Loading datasets...");
 
-		VFSGroupDataset<FImage> trainingSet = new VFSGroupDataset<>(args[0], ImageUtilities.FIMAGE_READER);
-		VFSListDataset<FImage> testingSet = new VFSListDataset<>(args[1], ImageUtilities.FIMAGE_READER);
+		File trainingFile = new File(args[0]);
+		File testingFile = new File(args[1]);
+
+		VFSGroupDataset<FImage> training = new VFSGroupDataset<>(
+			trainingFile.getAbsolutePath(),
+			ImageUtilities.FIMAGE_READER);
+		VFSListDataset<FImage> testing = new VFSListDataset<>(
+			testingFile.getAbsolutePath(),
+			ImageUtilities.FIMAGE_READER);
 
 		System.out.println("Training the classifier...");
 
-		KNearestNeighbour classifier = new KNearestNeighbour(trainingSet);
+		KNearestNeighbour classifier = new KNearestNeighbour(training);
 
 		classifier.train();
 
-		System.out.println("Classifing training set...");
+		System.out.println("Classifing testing set...");
 
 		int i = 0;
-
-		for(FImage image : testingSet)
+		for(FImage image : testing)
 		{
-			System.out.println(testingSet.getID(i++) + " " + classifier.classify(image));
+			System.out.println(testing.getID(i++) + " " + classifier.classify(image));
 		}
-    }
+	}
 
 	public KNearestNeighbour(VFSGroupDataset<FImage> trainingSet)
 	{
@@ -67,17 +77,21 @@ public class KNearestNeighbour
 
 		for(final Map.Entry<String, VFSListDataset<FImage>> group : this.trainingSet.entrySet())
 		{
-			Parallel.forEachPartitioned(new RangePartitioner<FImage>(group.getValue()), new Operation<Iterator<FImage>>() 
-			{
-				@Override
-				public void perform(Iterator<FImage> iterator) 
+			Parallel.forEachPartitioned(
+				new RangePartitioner<FImage>(group.getValue()),
+				new Operation<Iterator<FImage>>()
 				{
-					while(iterator.hasNext())
+					@Override
+					public void perform(Iterator<FImage> iterator)
 					{
-						KNearestNeighbour.this.featureVectors.put(KNearestNeighbour.this.getFeatureVector(iterator.next()), group.getKey());
+						while(iterator.hasNext())
+						{
+							KNearestNeighbour.this.featureVectors.put(
+								KNearestNeighbour.this.getFeatureVector(iterator.next()),
+								group.getKey());
+						}
 					}
-				}
-			});
+				});
 		}
 	}
 
