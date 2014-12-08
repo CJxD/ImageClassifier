@@ -17,9 +17,7 @@ import org.openimaj.knn.approximate.FloatNearestNeighboursKDTree;
 import org.openimaj.ml.annotation.Annotated;
 import org.openimaj.ml.annotation.AnnotatedObject;
 import org.openimaj.ml.training.BatchTrainer;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.pair.IntFloatPair;
-import org.openimaj.util.parallel.Parallel;
 
 /**
  * K-Nearest-Neighbour classifier using scaled-down images as the method of feature abstraction.
@@ -27,14 +25,17 @@ import org.openimaj.util.parallel.Parallel;
  * @author sl17g12
  *
  */
-public class KNearestNeighbour implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
+public class KNearestNeighbour
+	implements
+	Classifier<String, FImage>,
+	BatchTrainer<Annotated<FImage, String>>
 {
 	protected VFSGroupDataset<FImage> trainingSet;
 	protected Map<FloatFV, String> annotatedFeatures;
 
 	final public static int DIMENSION = 16;
 	final public static int K_DEFAULT = 5;
-	
+
 	private int K = 1;
 
 	public static void main(String[] args) throws FileSystemException
@@ -72,37 +73,32 @@ public class KNearestNeighbour implements Classifier<String, FImage>, BatchTrain
 	/**
 	 * Create a K-Nearest-Neighbour classifier with the default K value
 	 */
-	public KNearestNeighbour() {
+	public KNearestNeighbour()
+	{
 		this.K = K_DEFAULT;
 	}
-	
+
 	/**
 	 * Create a K-Nearest-Neighbour classifier
+	 * 
 	 * @param k Number of neighbours to classify against
 	 */
-	public KNearestNeighbour(int k) {
+	public KNearestNeighbour(int k)
+	{
 		this.K = k;
 	}
-	
+
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
 		annotatedFeatures = new HashMap<>();
 
 		// Project each image down to a small-scale feature vector
-		Parallel.forEach(
-			data,
-			new Operation<Annotated<FImage, String>>()
-			{
-				@Override
-				public void perform(Annotated<FImage, String> a)
-				{
-					annotatedFeatures.put(
-						getFeatureVector(a.getObject()),
-						a.getAnnotations().toArray(new String[1])[0]);
-				}
-			}
-		);
+		for (Annotated<FImage, String> a : data) {
+			annotatedFeatures.put(
+				getFeatureVector(a.getObject()),
+				a.getAnnotations().toArray(new String[1])[0]);
+		}
 	}
 
 	@Override
@@ -125,33 +121,56 @@ public class KNearestNeighbour implements Classifier<String, FImage>, BatchTrain
 		List<IntFloatPair> neighbours = nn.searchKNN(getFeatureVector(image).values, K);
 
 		// Create a frequency table of neighbours
-		Hashtable<Integer, Integer> frequency = new Hashtable<>(K);
-		
-		for (IntFloatPair neighbour : neighbours) {
+		Hashtable<String, Integer> frequency = new Hashtable<>(K);
+		// List the total distances to the neighbours
+		Hashtable<String, Float> distance = new Hashtable<>(K);
+		float totalDist = 0f;
+
+		for(IntFloatPair neighbour : neighbours)
+		{
+			String clazz = annotatedFeatures.get(new FloatFV(converted[neighbour.first]));
+			
 			// Add 1 to the frequency count
-			Integer currentFreq = frequency.get(neighbour.first);
-			frequency.put(neighbour.first, currentFreq == null ? 1 : ++currentFreq);
+			Integer currentFreq = frequency.get(clazz);
+			frequency.put(clazz, currentFreq == null ? 1 : ++currentFreq);
+			
+			// Add distance to the cumulative distance
+			Float currentDist = distance.get(clazz);
+			distance.put(clazz, currentDist == null ? neighbour.second : currentDist + neighbour.second);
+			totalDist += neighbour.second;
 		}
-		
+
 		// Find the most likely class by taking the average class of the nearest neighbours
+		// Checks both frequency and average distance from point
 		String clazz = "unknown";
 		int count = 0;
-		for (Entry<Integer, Integer> e : frequency.entrySet()) {
-			if (count < e.getValue()) {
-				clazz = annotatedFeatures.get(new FloatFV(converted[e.getKey()]));
+		float dist = 0f;
+		
+		for(Entry<String, Integer> e : frequency.entrySet())
+		{
+			float aveDist = distance.get(e.getKey()) / e.getValue();
+			
+			if(count < e.getValue() ||
+					count == e.getValue() && dist >= aveDist)
+			{
+				clazz = e.getKey();
 				count = e.getValue();
+				dist = aveDist;
 			}
 		}
+
+		// Weighting function
+		float weight = ((((float) count) / neighbours.size()) + (dist / totalDist)) / 2;
 		
-		// Put the class, and the proportion of this class to other classes in the result
 		PrintableClassificationResult<String> result = new PrintableClassificationResult<String>();
-		result.put(clazz, (float) count / neighbours.size());
-		
+		result.put(clazz, weight);
+
 		return result;
 	}
-	
+
 	/**
 	 * Convert an image into a {@link DIMENSION} by {@link DIMENSION} feature vector.
+	 * 
 	 * @param image
 	 * @return Flattened pixels of resized image
 	 */
