@@ -27,8 +27,7 @@ import org.openimaj.util.pair.IntFloatPair;
  */
 public class KNearestNeighbour
 	implements
-	Classifier<String, FImage>,
-	BatchTrainer<Annotated<FImage, String>>
+	ClassificationAlgorithm
 {
 	protected VFSGroupDataset<FImage> trainingSet;
 	protected Map<FloatFV, String> annotatedFeatures;

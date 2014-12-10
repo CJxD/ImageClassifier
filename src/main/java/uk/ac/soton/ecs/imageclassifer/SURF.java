@@ -33,7 +33,7 @@ import org.openimaj.feature.local.SpatialLocation;
 
 import com.stromberglabs.jopensurf.*;
 
-public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
+public class SURF implements ClassificationAlgorithm
 {
 	public static void main(String[] args) throws FileSystemException
 	{
@@ -152,7 +152,10 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 					
 				}
 				
-				
+				/*
+				 * FIXME
+				 */
+				return null;
 			}
 		}, NaiveBayesAnnotator.Mode.ALL);
 	}
@@ -160,7 +163,10 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
-		this.quantiser = new BagOfVisualWords<float[]>(assigner)
+		/*
+		 * FIXME
+		 */
+		this.quantiser = new BagOfVisualWords<float[]>(null);
 		Parallel.forEach(data, new Operation<Annotated<FImage, String>>()
 		{
 			@Override
@@ -181,7 +187,7 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 	@Override
 	public ClassificationResult<String> classify(FImage object)
 	{
-		this.bayes.annotate(object)
+		this.bayes.annotate(object);
 		return null;
 	}
 }

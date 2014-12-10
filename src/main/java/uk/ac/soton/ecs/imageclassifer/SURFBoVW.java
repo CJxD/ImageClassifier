@@ -56,7 +56,7 @@ import de.bwaldvogel.liblinear.SolverType;
  * @author cw17g12
  * 
  */
-public class SURFBoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
+public class SURFBoVW implements ClassificationAlgorithm
 {
 
 	protected int codebookSize = 500;

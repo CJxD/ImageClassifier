@@ -13,6 +13,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
+import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.experiment.evaluation.classification.Classifier;
 import org.openimaj.feature.FeatureExtractor;
@@ -47,7 +48,7 @@ import de.bwaldvogel.liblinear.SolverType;
  * @author cw17g12
  * 
  */
-public class BoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
+public class BoVW implements ClassificationAlgorithm
 {
 
 	protected int codebookSize = 500;
@@ -78,7 +79,7 @@ public class BoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<
 		
 		BoVW bovw = new BoVW();
 
-		bovw.train(AnnotatedObject.createList(training));
+		bovw.train(AnnotatedObject.createList(new GroupedRandomSplitter<String, FImage>(training, 10, 0, 0).getTrainingDataset()));
 		
 		System.out.println("Classifing testing set...");
 
@@ -227,7 +228,9 @@ public class BoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<
 			public SparseIntFV extractFeature(FImage image)
 			{
 				// Quantise the ImagePatches in the input to the nearest centroid
-				return quantiser.aggregate(getPatches(image));
+				LocalFeatureList<ImagePatch> patches = getPatches(image);
+				SparseIntFV test = quantiser.aggregate(patches);
+				return test;
 			}
 
 		};

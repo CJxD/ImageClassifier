@@ -56,7 +56,7 @@ import de.bwaldvogel.liblinear.SolverType;
  * @author cw17g12
  * 
  */
-public class SiftBoVW implements Classifier<String, FImage>, BatchTrainer<Annotated<FImage, String>>
+public class SIFTBoVW implements ClassificationAlgorithm
 {
 
 	protected int codebookSize = 500;
@@ -85,7 +85,7 @@ public class SiftBoVW implements Classifier<String, FImage>, BatchTrainer<Annota
 
 		System.out.println("Training the classifier...");
 
-		SiftBoVW bovw = new SiftBoVW();
+		SIFTBoVW bovw = new SIFTBoVW();
 
 		bovw.train(AnnotatedObject.createList(training));
 
