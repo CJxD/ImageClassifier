@@ -1,13 +1,19 @@
 package uk.ac.soton.ecs.imageclassifer;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
+import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
 import org.openimaj.ml.annotation.Annotated;
 import org.openimaj.ml.annotation.AnnotatedObject;
 import org.openimaj.ml.annotation.bayes.NaiveBayesAnnotator;
@@ -22,6 +28,8 @@ import org.openimaj.experiment.evaluation.classification.Classifier;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.feature.FeatureVector;
 import org.openimaj.feature.FloatFV;
+import org.openimaj.feature.local.LocalFeature;
+import org.openimaj.feature.local.SpatialLocation;
 
 import com.stromberglabs.jopensurf.*;
 
@@ -59,6 +67,74 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
     }
 	
 	protected NaiveBayesAnnotator<FImage, String> bayes;
+	protected BagOfVisualWords<float[]> quantiser;
+	
+	private class SurfInterestPoint implements LocalFeature<SpatialLocation, FloatFV>
+	{
+		protected SpatialLocation location;
+		protected FloatFV vector;
+		
+		public SurfInterestPoint(SURFInterestPoint point)
+		{
+			this.location = new SpatialLocation(point.getX(), point.getY());
+			this.vector = new FloatFV(point.getDescriptor());
+		}
+
+		@Override
+		public void readASCII(Scanner in) throws IOException
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public String asciiHeader()
+		{
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void readBinary(DataInput in) throws IOException
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public byte[] binaryHeader()
+		{
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void writeASCII(PrintWriter out) throws IOException
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void writeBinary(DataOutput out) throws IOException
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public FloatFV getFeatureVector()
+		{
+			return this.vector;
+		}
+
+		@Override
+		public SpatialLocation getLocation()
+		{
+			return this.location;
+		}
+	
+	}
 
 	public SURF()
 	{
@@ -71,6 +147,11 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 				
 				List<SURFInterestPoint> points = surf.getUprightInterestPoints();
 				
+				for(SURFInterestPoint point : points)
+				{
+					
+				}
+				
 				
 			}
 		}, NaiveBayesAnnotator.Mode.ALL);
@@ -79,6 +160,7 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
+		this.quantiser = new BagOfVisualWords<float[]>(assigner)
 		Parallel.forEach(data, new Operation<Annotated<FImage, String>>()
 		{
 			@Override
@@ -89,7 +171,7 @@ public class SURF implements Classifier<String, FImage>, BatchTrainer<Annotated<
 				List<SURFInterestPoint> points = surf.getUprightInterestPoints();
 				
 				for(SURFInterestPoint point : points)
-				{
+				{ 
 					// SURF.this.bayes.train(new AnnotatedObject<FloatFV, String>(new FloatFV(point.getDescriptor()), object.getAnnotations().iterator().next()));
 				}
 			}
