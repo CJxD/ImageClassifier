@@ -140,7 +140,7 @@ public class Utilities
 		for(FImage image : testing)
 		{
 			String r = testing.getID(i++) + " " + classifier.classify(image);
-			System.out.println(r);
+			System.out.printf("Classifying image %d: %s\n", i, r);
 			writer.println(r);
 		}
 		
