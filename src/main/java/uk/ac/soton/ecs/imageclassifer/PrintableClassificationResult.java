@@ -62,7 +62,7 @@ public class PrintableClassificationResult<CLASS> extends BasicClassificationRes
 			}
 		}
 		
-		return best.toString();
+		return best == null ? "unknown" : best.toString();
 	}
 	
 	public String resultList() {
