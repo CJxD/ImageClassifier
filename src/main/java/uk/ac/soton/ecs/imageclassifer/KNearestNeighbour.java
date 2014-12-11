@@ -161,7 +161,7 @@ public class KNearestNeighbour
 		// Weighting function
 		float weight = ((((float) count) / neighbours.size()) + (dist / totalDist)) / 2;
 		
-		PrintableClassificationResult<String> result = new PrintableClassificationResult<String>();
+		PrintableClassificationResult<String> result = new PrintableClassificationResult<String>(PrintableClassificationResult.BEST_RESULT);
 		result.put(clazz, weight);
 
 		return result;

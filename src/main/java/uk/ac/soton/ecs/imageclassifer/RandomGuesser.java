@@ -24,7 +24,7 @@ public class RandomGuesser implements ClassificationAlgorithm
 	{
 		int clazz = new Random().nextInt(classes.size());
 		
-		PrintableClassificationResult<String> result = new PrintableClassificationResult<>();
+		PrintableClassificationResult<String> result = new PrintableClassificationResult<>(PrintableClassificationResult.BEST_RESULT);
 		result.put(classes.toArray(new String[0])[clazz], 1);
 		
 		return result;

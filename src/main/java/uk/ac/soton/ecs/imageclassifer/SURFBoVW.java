@@ -192,7 +192,7 @@ public class SURFBoVW implements ClassificationAlgorithm
 		if(annotator == null)
 			throw new IllegalStateException("Annotator is not trained");
 
-		PrintableClassificationResult<String> result = new PrintableClassificationResult<>();
+		PrintableClassificationResult<String> result = new PrintableClassificationResult<>(PrintableClassificationResult.BEST_RESULT);
 
 		for(ScoredAnnotation<String> a : annotator.annotate(image))
 		{
