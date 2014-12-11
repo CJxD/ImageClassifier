@@ -1,51 +1,34 @@
 package uk.ac.soton.ecs.imageclassifer;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
 import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.experiment.evaluation.classification.Classifier;
+import org.openimaj.feature.DoubleFV;
 import org.openimaj.feature.FeatureExtractor;
-import org.openimaj.feature.FloatFV;
-import org.openimaj.feature.SparseIntFV;
-import org.openimaj.feature.local.LocalFeature;
-import org.openimaj.feature.local.LocalFeatureVectorProvider;
-import org.openimaj.feature.local.SpatialLocation;
 import org.openimaj.feature.local.data.LocalFeatureListDataSource;
 import org.openimaj.feature.local.list.LocalFeatureList;
-import org.openimaj.feature.local.list.MemoryLocalFeatureList;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
 import org.openimaj.image.feature.local.engine.DoGSIFTEngine;
 import org.openimaj.image.feature.local.keypoints.Keypoint;
-import org.openimaj.math.geometry.shape.Rectangle;
 import org.openimaj.ml.annotation.Annotated;
 import org.openimaj.ml.annotation.AnnotatedObject;
 import org.openimaj.ml.annotation.ScoredAnnotation;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator.Mode;
 import org.openimaj.ml.clustering.ByteCentroidsResult;
-import org.openimaj.ml.clustering.FloatCentroidsResult;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
-import org.openimaj.ml.clustering.kmeans.FloatKMeans;
-import org.openimaj.ml.training.BatchTrainer;
-
-import com.stromberglabs.jopensurf.SURFInterestPoint;
-import com.stromberglabs.jopensurf.Surf;
-
+import org.openimaj.ml.kernel.HomogeneousKernelMap;
+import org.openimaj.ml.kernel.HomogeneousKernelMap.KernelType;
+import org.openimaj.ml.kernel.HomogeneousKernelMap.WindowType;
 import de.bwaldvogel.liblinear.SolverType;
 
 /**
@@ -120,14 +103,8 @@ public class SIFTBoVW implements ClassificationAlgorithm
 			throw new IllegalStateException("Classifier is not trained");
 		if(annotator == null)
 			throw new IllegalStateException("Annotator is not trained");
-
-		PrintableClassificationResult<String> result = new PrintableClassificationResult<>();
-
-		for(ScoredAnnotation<String> a : annotator.annotate(image))
-		{
-			result.put(a.annotation, a.confidence);
-		}
-		return result;
+		
+		return Utilities.scoredListToResult(annotator.annotate(image));
 	}
 	
 	protected Map<FImage, LocalFeatureList<Keypoint>> featureCache;
@@ -173,14 +150,17 @@ public class SIFTBoVW implements ClassificationAlgorithm
 		if(quantiser == null)
 			throw new IllegalStateException("Quantiser is not trained");
 
-		FeatureExtractor<SparseIntFV, FImage> extractor = new FeatureExtractor<SparseIntFV, FImage>()
+		FeatureExtractor<DoubleFV, FImage> extractor = new FeatureExtractor<DoubleFV, FImage>()
 		{
 			@Override
-			public SparseIntFV extractFeature(FImage image)
+			public DoubleFV extractFeature(FImage image)
 			{
-				return quantiser.aggregate(getFeatures(image));
+				return quantiser.aggregate(getFeatures(image)).normaliseFV();
 			}
 		};
+		
+		HomogeneousKernelMap homo = new HomogeneousKernelMap(KernelType.Chi2, WindowType.Rectangular);
+		extractor = homo.createWrappedExtractor(extractor);
 
 		// Train the annotator to make associations between certain "words" and image classes
 
