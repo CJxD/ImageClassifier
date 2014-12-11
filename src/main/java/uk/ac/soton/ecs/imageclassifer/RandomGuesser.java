@@ -9,16 +9,19 @@ import org.openimaj.image.FImage;
 import org.openimaj.ml.annotation.Annotated;
 
 /**
- * 
  * Literally just guesses classes randomly
  * 
  * @author cw17g12
- *
  */
 public class RandomGuesser implements ClassificationAlgorithm
 {
 	private HashSet<String> classes = new HashSet<>();
 	
+	/**
+	 * Classify an image
+	 * @param object The image
+	 * @return The result
+	 */
 	@Override
 	public ClassificationResult<String> classify(FImage object)
 	{
@@ -30,6 +33,10 @@ public class RandomGuesser implements ClassificationAlgorithm
 		return result;
 	}
 
+	/**
+	 * Train the classifier
+	 * @param data The training set
+	 */
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{

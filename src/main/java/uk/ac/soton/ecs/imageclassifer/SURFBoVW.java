@@ -16,7 +16,6 @@ import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.experiment.evaluation.classification.Classifier;
 import org.openimaj.feature.DoubleFV;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.feature.FloatFV;
@@ -30,7 +29,6 @@ import org.openimaj.feature.local.list.MemoryLocalFeatureList;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
-import org.openimaj.math.geometry.shape.Rectangle;
 import org.openimaj.ml.annotation.Annotated;
 import org.openimaj.ml.annotation.AnnotatedObject;
 import org.openimaj.ml.annotation.ScoredAnnotation;
@@ -41,20 +39,15 @@ import org.openimaj.ml.clustering.kmeans.FloatKMeans;
 import org.openimaj.ml.kernel.HomogeneousKernelMap;
 import org.openimaj.ml.kernel.HomogeneousKernelMap.KernelType;
 import org.openimaj.ml.kernel.HomogeneousKernelMap.WindowType;
-import org.openimaj.ml.training.BatchTrainer;
-
 import com.stromberglabs.jopensurf.SURFInterestPoint;
 import com.stromberglabs.jopensurf.Surf;
 
 import de.bwaldvogel.liblinear.SolverType;
 
 /**
- * Bag of Visual Words classifier Given a grouped dataset of training images, and a list dataset of testing images, BoVW
- * will use K-means on overlapping 8x8 image patches in each image to generate a 'codebook' for the quantiser, then
- * liblinear annotation to classify the input.
+ * SURF interest points image classifier using bag of words, lib linear annotator and homgenous kernel maps
  * 
- * @author cw17g12
- * 
+ * @author Sam Lavers
  */
 public class SURFBoVW implements ClassificationAlgorithm
 {
@@ -105,10 +98,9 @@ public class SURFBoVW implements ClassificationAlgorithm
 	}
 
 	/**
-	 * Represents a small image patch as a feature vector and a spatial location.
+	 * Represents a surf interest point as a local feature
 	 * 
-	 * @author cw17g12
-	 *
+	 * @author Sam Lavers
 	 */
 	protected class SurfInterestPoint
 		implements
@@ -175,6 +167,10 @@ public class SURFBoVW implements ClassificationAlgorithm
 
 	}
 
+	/**
+	 * Train the classifier
+	 * @param data The trainign set
+	 */
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
@@ -184,6 +180,11 @@ public class SURFBoVW implements ClassificationAlgorithm
 		trainAnnotator(data);
 	}
 
+	/**
+	 * Classify an image
+	 * @param image The image
+	 * @return The result
+	 */
 	@Override
 	public ClassificationResult<String> classify(FImage image)
 	{
@@ -264,6 +265,11 @@ public class SURFBoVW implements ClassificationAlgorithm
 		annotator.train(data);
 	}
 
+	/**
+	 * Gets the SURF interest points for a given image
+	 * @param image The image
+	 * @return SURF interest points
+	 */
 	protected LocalFeatureList<SurfInterestPoint> getFeatures(FImage image)
 	{
 		LocalFeatureList<SurfInterestPoint> cached = this.featureCache.get(image);

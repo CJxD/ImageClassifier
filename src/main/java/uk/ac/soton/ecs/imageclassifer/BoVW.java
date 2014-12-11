@@ -13,9 +13,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
-import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.experiment.evaluation.classification.Classifier;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.feature.FloatFV;
 import org.openimaj.feature.SparseIntFV;
@@ -36,8 +34,6 @@ import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator.Mode;
 import org.openimaj.ml.clustering.FloatCentroidsResult;
 import org.openimaj.ml.clustering.kmeans.FloatKMeans;
-import org.openimaj.ml.training.BatchTrainer;
-
 import de.bwaldvogel.liblinear.SolverType;
 
 /**
@@ -162,6 +158,10 @@ public class BoVW implements ClassificationAlgorithm
 
 	}
 
+	/**
+	 * Train the classifier
+	 * @param data The training set
+	 */
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
@@ -169,6 +169,11 @@ public class BoVW implements ClassificationAlgorithm
 		trainAnnotator(data);
 	}
 
+	/**
+	 * Classify an image
+	 * @param image The image
+	 * @return The classification result
+	 */
 	@Override
 	public ClassificationResult<String> classify(FImage image)
 	{

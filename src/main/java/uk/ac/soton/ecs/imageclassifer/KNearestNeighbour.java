@@ -22,8 +22,7 @@ import org.openimaj.util.pair.IntFloatPair;
 /**
  * K-Nearest-Neighbour classifier using scaled-down images as the method of feature abstraction.
  * 
- * @author sl17g12
- *
+ * @author Sam Lavers
  */
 public class KNearestNeighbour
 	implements
@@ -87,6 +86,10 @@ public class KNearestNeighbour
 		this.K = k;
 	}
 
+	/**
+	 * Train the classifier
+	 * @param data The training set
+	 */
 	@Override
 	public void train(List<? extends Annotated<FImage, String>> data)
 	{
@@ -100,6 +103,11 @@ public class KNearestNeighbour
 		}
 	}
 
+	/**
+	 * Classify an image
+	 * @param image The image
+	 * @return The classification result
+	 */
 	@Override
 	public ClassificationResult<String> classify(FImage image)
 	{
