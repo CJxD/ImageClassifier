@@ -79,7 +79,7 @@ public class BoVW implements ClassificationAlgorithm
 		
 		BoVW bovw = new BoVW();
 
-		bovw.train(AnnotatedObject.createList(new GroupedRandomSplitter<String, FImage>(training, 10, 0, 0).getTrainingDataset()));
+		bovw.train(AnnotatedObject.createList(training));
 		
 		System.out.println("Classifing testing set...");
 
