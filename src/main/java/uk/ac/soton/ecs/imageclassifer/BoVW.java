@@ -3,6 +3,7 @@ package uk.ac.soton.ecs.imageclassifer;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -58,37 +59,9 @@ public class BoVW implements ClassificationAlgorithm
 	protected BagOfVisualWords<float[]> quantiser;
 	protected LiblinearAnnotator<FImage, String> annotator;
 
-	public static void main(String[] args) throws FileSystemException
+	public static void main(String[] args) throws FileSystemException, FileNotFoundException
 	{
-		if(args.length < 2)
-			throw new IllegalArgumentException("Usage: BoVW <training uri> <testing uri>");
-
-		System.out.println("Loading datasets...");
-		
-		File trainingFile = new File(args[0]);
-		File testingFile = new File(args[1]);
-
-		VFSGroupDataset<FImage> training = new VFSGroupDataset<>(
-			trainingFile.getAbsolutePath(),
-			ImageUtilities.FIMAGE_READER);
-		VFSListDataset<FImage> testing = new VFSListDataset<>(
-			testingFile.getAbsolutePath(),
-			ImageUtilities.FIMAGE_READER);
-
-		System.out.println("Training the classifier...");
-		
-		BoVW bovw = new BoVW();
-
-		bovw.train(AnnotatedObject.createList(training));
-		
-		System.out.println("Classifing testing set...");
-
-		int i = 0;
-		for(FImage image : testing)
-		{
-			System.out.println(testing.getID(i++) + " => ");
-			System.out.println(bovw.classify(image));
-		}
+		Utilities.runClassifier(new BoVW(), "ImagePatches", args);
 	}
 
 	/**

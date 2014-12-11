@@ -1,9 +1,11 @@
 package uk.ac.soton.ecs.imageclassifer;
 
+import java.io.FileNotFoundException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.image.FImage;
 import org.openimaj.ml.annotation.Annotated;
@@ -18,6 +20,11 @@ import org.openimaj.ml.annotation.Annotated;
 public class RandomGuesser implements ClassificationAlgorithm
 {
 	private HashSet<String> classes = new HashSet<>();
+	
+	public static void main(String[] args) throws FileSystemException, FileNotFoundException
+	{
+		Utilities.runClassifier(new RandomGuesser(), "Random", args);
+	}
 	
 	@Override
 	public ClassificationResult<String> classify(FImage object)
