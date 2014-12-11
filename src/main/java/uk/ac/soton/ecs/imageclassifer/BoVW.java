@@ -79,7 +79,7 @@ public class BoVW implements ClassificationAlgorithm
 		
 		BoVW bovw = new BoVW();
 
-		bovw.train(AnnotatedObject.createList(new GroupedRandomSplitter<String, FImage>(training, 10, 0, 0).getTrainingDataset()));
+		bovw.train(AnnotatedObject.createList(training));
 		
 		System.out.println("Classifing testing set...");
 
@@ -108,7 +108,7 @@ public class BoVW implements ClassificationAlgorithm
 
 		public ImagePatch(int x, int y, FImage patch)
 		{
-			this.fv = Utilities.zeroMean(patch.normalise());
+			this.fv = new FloatFV(patch.getFloatPixelVector());
 			this.location = new SpatialLocation(x, y);
 		}
 
