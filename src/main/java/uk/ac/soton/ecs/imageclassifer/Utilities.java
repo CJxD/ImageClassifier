@@ -135,18 +135,15 @@ public class Utilities
 		// Classify testing set & write results
 
 		System.out.println("Classifing testing set...");
-			
-		StringBuilder result = new StringBuilder();
 		
 		int i = 0;
 		for(FImage image : testing)
 		{
 			String r = testing.getID(i++) + " " + classifier.classify(image);
 			System.out.println(r);
-			result.append(r + "\n");
+			writer.println(r);
 		}
 		
-		writer.write(result.toString());
 		writer.close();
 	}
 }
