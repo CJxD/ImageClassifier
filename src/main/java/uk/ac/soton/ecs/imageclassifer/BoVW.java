@@ -108,7 +108,7 @@ public class BoVW implements ClassificationAlgorithm
 
 		public ImagePatch(int x, int y, FImage patch)
 		{
-			this.fv = Utilities.zeroMean(patch.normalise());
+			this.fv = new FloatFV(patch.getFloatPixelVector());
 			this.location = new SpatialLocation(x, y);
 		}
 
