@@ -30,6 +30,9 @@ import org.openimaj.ml.annotation.linear.LiblinearAnnotator.Mode;
 import org.openimaj.ml.clustering.ByteCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
+import org.openimaj.ml.kernel.HomogeneousKernelMap;
+import org.openimaj.ml.kernel.HomogeneousKernelMap.KernelType;
+import org.openimaj.ml.kernel.HomogeneousKernelMap.WindowType;
 import org.openimaj.util.pair.IntFloatPair;
 
 import de.bwaldvogel.liblinear.SolverType;
@@ -78,6 +81,9 @@ public class PyramidSift implements ClassificationAlgorithm
 				return spatial.aggregate(pdsift.getByteKeypoints(0.015f), image.getBounds()).normaliseFV();
 			}
 		};
+		
+		HomogeneousKernelMap hkm = new HomogeneousKernelMap(KernelType.Chi2, WindowType.Rectangular);
+		extractor = hkm.createWrappedExtractor(extractor);
 		
 		// Train the annotator
 
